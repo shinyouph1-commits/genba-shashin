@@ -24,10 +24,10 @@
   .field { margin-bottom: 16px; }
   .field:last-child { margin-bottom: 0; }
   label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-  input[type="text"], input[type="date"], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 15px; padding: 11px 14px; outline: none; transition: border-color .2s; }
+  input[type="text"], input[type="date"], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 15px; padding: 11px 14px; outline: none; transition: border-color .2s; appearance: none; }
   input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: var(--accent); }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
-  select option { background: var(--surface2); }
+  select option { background: var(--surface2); color: var(--text); }
   .mode-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
   .mode-tab { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; }
   .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -56,7 +56,7 @@
   #filename-preview { background: var(--surface2); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-top: 4px; min-height: 44px; }
   #filename-preview .fn-folder { color: var(--accent2); }
   #filename-preview .fn-file { color: var(--success); }
-  .drive-status { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .drive-status { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 12px; }
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
   .status-dot.connected { background: var(--success); }
   .status-dot.error { background: var(--error); }
@@ -65,7 +65,6 @@
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
   .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); margin-bottom: 16px; width: 100%; max-width: 640px; }
-  .btn-small { padding: 8px 14px; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--sans); font-weight: 700; cursor: pointer; margin-top: 8px; }
   #log { width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-top: 16px; display: none; }
   #log.visible { display: block; }
   .log-line { font-family: var(--mono); font-size: 12px; line-height: 2; display: flex; align-items: flex-start; gap: 8px; }
@@ -132,11 +131,10 @@
   <div class="field">
     <label>保存先フォルダを選択</label>
     <select id="f-folder-select" onchange="onFolderSelect()">
-      <option value="">-- フォルダを選択 --</option>
+      <option value="">-- 接続後に自動読み込み --</option>
     </select>
-    <button class="btn-small" onclick="loadFolderList()">🔄 フォルダ一覧を更新</button>
   </div>
-  <div class="drive-status" style="margin-top:12px">
+  <div class="drive-status">
     <div class="status-dot" id="status-dot"></div>
     <span id="status-text" style="font-size:12px;color:var(--text-muted)">未接続</span>
   </div>
@@ -152,6 +150,7 @@
 <script>
 const CLIENT_ID='557911723346-bnce8oln4km4lf4a1vlltk3caogt5mtm.apps.googleusercontent.com';
 const SOURCE_FOLDER_ID='17Dpan8lTYVe56sffwl4ZpQHM0bvKNMBT';
+const SCOPES='https://www.googleapis.com/auth/drive';
 let files=[],driveFiles=[],mode='local',accessToken=null,tokenExpiry=0,selectedFolderId=null;
 function switchMode(m){mode=m;document.getElementById('tab-local').classList.toggle('active',m==='local');document.getElementById('tab-drive').classList.toggle('active',m==='drive');document.getElementById('mode-local').style.display=m==='local'?'':'none';document.getElementById('mode-drive').style.display=m==='drive'?'':'none';files=[];driveFiles=[];document.getElementById('preview-grid').innerHTML='';document.getElementById('preview-count').style.display='none';updateFilenamePreview();checkRunnable();}
 function fmtDate(s){if(!s)return{folder:'',file:''};const[y,m,d]=s.split('-');return{folder:`${y}.${parseInt(m)}.${parseInt(d)}`,file:`${y}${m}${d}`};}
@@ -162,19 +161,19 @@ function updateFilenamePreview(){const fpreview=document.getElementById('filenam
 function updateLocalPreview(){const grid=document.getElementById('preview-grid'),countEl=document.getElementById('preview-count');grid.innerHTML='';if(files.length===0){countEl.style.display='none';return;}countEl.style.display='block';countEl.textContent=`${files.length} 枚選択中`;const names=fileNames();files.slice(0,20).forEach((f,i)=>{const url=URL.createObjectURL(f),item=document.createElement('div');item.className='preview-item';item.innerHTML=`<img src="${url}" loading="lazy"><div class="name-badge">${names[i]||f.name}</div>`;grid.appendChild(item);});}
 function updateDrivePreview(){const countEl=document.getElementById('preview-count'),sel=driveFiles.filter(f=>f.selected);countEl.style.display=sel.length>0?'block':'none';countEl.textContent=`${sel.length} 枚選択中`;}
 ['f-date','f-address','f-name'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{updateFilenamePreview();if(mode==='local')updateLocalPreview();if(mode==='drive')renderDriveList();checkRunnable();});});
-function onFolderSelect(){selectedFolderId=document.getElementById('f-folder-select').value;checkRunnable();}
+function onFolderSelect(){selectedFolderId=document.getElementById('f-folder-select').value||null;checkRunnable();}
 function checkRunnable(){const ok=getCount()>0&&document.getElementById('f-date').value&&document.getElementById('f-address').value.trim()&&document.getElementById('f-name').value.trim()&&accessToken&&selectedFolderId;document.getElementById('btn-run').disabled=!ok;}
 const dz=document.getElementById('dropzone'),fi=document.getElementById('file-input');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));updateLocalPreview();updateFilenamePreview();checkRunnable();});
 fi.addEventListener('change',()=>{files=Array.from(fi.files);updateLocalPreview();updateFilenamePreview();checkRunnable();});
-async function loadFolderList(){if(!accessToken){alert('先にGoogle Driveに接続してください');return;}const sel=document.getElementById('f-folder-select');sel.innerHTML='<option value="">読み込み中...</option>';try{const res=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("mimeType='application/vnd.google-apps.folder' and trashed=false")}&fields=files(id,name)&orderBy=name&pageSize=100`);sel.innerHTML='<option value="">-- フォルダを選択 --</option>';res.files.forEach(f=>{const opt=document.createElement('option');opt.value=f.id;opt.textContent=`📁 ${f.name}`;sel.appendChild(opt);});}catch(e){sel.innerHTML='<option value="">読み込み失敗</option>';alert('フォルダ読み込みエラー: '+e.message);}}
+async function loadFolderList(){if(!accessToken)return;const sel=document.getElementById('f-folder-select');sel.innerHTML='<option value="">読み込み中...</option>';try{const res=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("mimeType='application/vnd.google-apps.folder' and trashed=false")}&fields=files(id,name)&orderBy=name&pageSize=100`);sel.innerHTML='<option value="">-- フォルダを選択 --</option>';res.files.forEach(f=>{const opt=document.createElement('option');opt.value=f.id;opt.textContent=`📁 ${f.name}`;sel.appendChild(opt);});if(res.files.length===0)sel.innerHTML='<option value="">フォルダが見つかりません</option>';}catch(e){sel.innerHTML='<option value="">読み込み失敗 - 再接続してください</option>';}}
 async function loadDriveFolder(){if(!accessToken){alert('先にGoogle Driveに接続してください');return;}const folderId=document.getElementById('f-source-folder').value.trim()||SOURCE_FOLDER_ID;const btn=document.querySelector('.btn-load-folder');btn.textContent='読み込み中...';btn.disabled=true;try{const q=`'${folderId}' in parents and mimeType contains 'image/' and trashed=false`,res=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,thumbnailLink,mimeType)&pageSize=100`);driveFiles=res.files.map(f=>({...f,selected:true}));renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();}catch(e){alert('読み込みエラー: '+e.message);}btn.textContent='📂 読み込む';btn.disabled=false;}
 function renderDriveList(){const container=document.getElementById('drive-file-items'),listEl=document.getElementById('drive-file-list'),names=fileNames();if(driveFiles.length===0){listEl.style.display='none';return;}listEl.style.display='block';container.innerHTML='';driveFiles.forEach((f,i)=>{const sel=driveFiles.filter(x=>x.selected),idx=sel.findIndex(x=>x.id===f.id),newName=idx>=0?names[idx]:f.name,item=document.createElement('div');item.className='drive-file-item'+(f.selected?' selected':'');item.innerHTML=`<input type="checkbox" ${f.selected?'checked':''} onchange="toggleFile(${i}, this.checked)">${f.thumbnailLink?`<img class="drive-file-thumb" src="${f.thumbnailLink}" loading="lazy">`:'<div class="drive-file-thumb"></div>'}<span class="drive-file-name" title="${newName}">${newName}</span>`;container.appendChild(item);});}
 function toggleFile(i,checked){driveFiles[i].selected=checked;renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();}
 function toggleSelectAll(){const allSelected=driveFiles.every(f=>f.selected);driveFiles.forEach(f=>f.selected=!allSelected);renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();}
-function connectDrive(){const redirect=location.href.split('#')[0],scope='https://www.googleapis.com/auth/drive.file',url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=consent`;window.location.href=url;}
+function connectDrive(){const redirect=location.href.split('#')[0],url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=consent`;window.location.href=url;}
 (function parseToken(){const hash=location.hash.slice(1);if(!hash)return;const params=Object.fromEntries(hash.split('&').map(p=>p.split('=')));if(params.access_token){accessToken=params.access_token;tokenExpiry=Date.now()+parseInt(params.expires_in||3600)*1000;history.replaceState(null,'',location.pathname+location.search);setDriveStatus(true);loadFolderList();checkRunnable();}})();
 function setDriveStatus(ok){const dot=document.getElementById('status-dot'),txt=document.getElementById('status-text');dot.className='status-dot '+(ok?'connected':'error');txt.textContent=ok?'接続済み ✓':'接続失敗';txt.style.color=ok?'var(--success)':'var(--error)';}
 function showAuthErr(msg){const el=document.getElementById('auth-err');el.textContent=msg;el.style.display='block';}
