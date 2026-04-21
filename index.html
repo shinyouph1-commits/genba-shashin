@@ -157,7 +157,18 @@ function switchMode(m){mode=m;document.getElementById('tab-local').classList.tog
 function fmtDate(s){if(!s)return{folder:'',file:''};const[y,m,d]=s.split('-');return{folder:`${y}.${parseInt(m)}.${parseInt(d)}`,file:`${y}${m}${d}`};}
 function folderName(){const date=fmtDate(document.getElementById('f-date').value).folder,addr=document.getElementById('f-address').value.trim(),name=document.getElementById('f-name').value.trim();if(!date&&!addr&&!name)return'';return[date,addr,name].filter(Boolean).join('-');}
 function getCount(){return mode==='local'?files.length:driveFiles.filter(f=>f.selected).length;}
-function fileNames(){const{file:dateFile}=fmtDate(document.getElementById('f-date').value),name=document.getElementById('f-name').value.trim(),count=getCount();return Array.from({length:count},(_,i)=>{const num=String(i+1).padStart(3,'0');let ext='jpg';if(mode==='local'&&files[i])ext=files[i].name.split('.').pop().toLowerCase()||'jpg';if(mode==='drive'){const sel=driveFiles.filter(f=>f.selected);if(sel[i])ext=sel[i].name.split('.').pop().toLowerCase()||'jpg';}return`${dateFile}_${name}_${num}.${ext}`;});}
+function fileNames(){
+  const{file:dateFile}=fmtDate(document.getElementById('f-date').value);
+  const name=document.getElementById('f-name').value.trim();
+  const count=getCount();
+  return Array.from({length:count},(_,i)=>{
+    const num=String(i+1).padStart(3,'0');
+    let ext='jpg';
+    if(mode==='local'&&files[i])ext=files[i].name.split('.').pop().toLowerCase()||'jpg';
+    if(mode==='drive'){const sel=driveFiles.filter(f=>f.selected);if(sel[i])ext=sel[i].name.split('.').pop().toLowerCase()||'jpg';}
+    return`${dateFile}_${num}_${name}.${ext}`;
+  });
+}
 function updateFilenamePreview(){const fpreview=document.getElementById('filename-preview'),folder=folderName(),names=fileNames();if(!folder&&getCount()===0){fpreview.innerHTML='現場情報と写真を入力すると自動生成されます';return;}let html='';if(folder)html+=`<div class="fn-folder">📁 ${folder}/</div>`;names.slice(0,5).forEach(n=>{html+=`<div class="fn-file">&nbsp;&nbsp;📷 ${n}</div>`;});if(names.length>5)html+=`<div style="color:var(--text-muted)">&nbsp;&nbsp;... 他 ${names.length-5} 枚</div>`;fpreview.innerHTML=html||'現場情報と写真を入力すると自動生成されます';}
 function updateLocalPreview(){const grid=document.getElementById('preview-grid'),countEl=document.getElementById('preview-count');grid.innerHTML='';if(files.length===0){countEl.style.display='none';return;}countEl.style.display='block';countEl.textContent=`${files.length} 枚選択中`;const names=fileNames();files.slice(0,20).forEach((f,i)=>{const url=URL.createObjectURL(f),item=document.createElement('div');item.className='preview-item';item.innerHTML=`<img src="${url}" loading="lazy"><div class="name-badge">${names[i]||f.name}</div>`;grid.appendChild(item);});}
 function updateDrivePreview(){const countEl=document.getElementById('preview-count'),sel=driveFiles.filter(f=>f.selected);countEl.style.display=sel.length>0?'block':'none';countEl.textContent=`${sel.length} 枚選択中`;}
