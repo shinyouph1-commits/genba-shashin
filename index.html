@@ -437,6 +437,8 @@
     font-family: 'Share Tech Mono', monospace;
   }
 </style>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer onload="initGsi()"></script>
 </head>
 <body>
 
@@ -726,29 +728,30 @@ function onFolderUrlInput() {
   }
 }
 
-// ── Google 認証 ───────────────────────────────────────
-function connectDrive() {
-  const params = new URLSearchParams({
+// ── Google 認証（GSI TokenClient）────────────────────
+let tokenClient = null;
+
+function initGsi() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
-    redirect_uri: location.origin + location.pathname,
-    response_type: 'token',
     scope: SCOPE,
+    callback: (resp) => {
+      if (resp.error) {
+        setConnected(false);
+        alert('認証エラー: ' + resp.error);
+        return;
+      }
+      accessToken = resp.access_token;
+      setConnected(true);
+      updatePreview();
+    },
   });
-  sessionStorage.setItem('pendingAuth','1');
-  location.href = `https://accounts.google.com/o/oauth2/auth?${params}`;
 }
 
-function checkToken() {
-  const hash = new URLSearchParams(location.hash.replace('#',''));
-  const token = hash.get('access_token');
-  if (token) {
-    accessToken = token;
-    history.replaceState(null,'',location.pathname);
-    setConnected(true);
-    updatePreview();
-  }
+function connectDrive() {
+  if (!tokenClient) { alert('GSIライブラリ読み込み中です。少し待ってから再試行してください。'); return; }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
 }
-checkToken();
 
 function setConnected(ok) {
   const dot = document.getElementById('connDot');
