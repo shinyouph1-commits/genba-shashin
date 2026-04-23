@@ -6,184 +6,956 @@
 <title>現場写真整理</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap');
+
   :root {
-    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
-    --border: #2e3352; --accent: #ff6b35; --accent2: #ffd166;
-    --text: #e8eaf0; --text-muted: #7a7f9a; --success: #06d6a0;
-    --error: #ef476f; --mono: 'Share Tech Mono', monospace; --sans: 'Noto Sans JP', sans-serif;
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3248;
+    --accent: #4f8ef7;
+    --accent2: #34d399;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 60px; }
-  header { width: 100%; max-width: 640px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; }
-  .logo-icon { width: 44px; height: 44px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-  header h1 { font-size: 18px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; }
-  header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .card { width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
-  .card-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
-  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  .field { margin-bottom: 16px; }
-  .field:last-child { margin-bottom: 0; }
-  label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-  input[type="text"], input[type="date"] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 15px; padding: 11px 14px; outline: none; transition: border-color .2s; }
-  input[type="text"]:focus, input[type="date"]:focus { border-color: var(--accent); }
-  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
-  .mode-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
-  .mode-tab { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; }
-  .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative; }
-  .dropzone.drag-over { border-color: var(--accent); background: rgba(255,107,53,.07); }
-  .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .drop-icon { font-size: 36px; margin-bottom: 10px; }
-  .drop-text { font-size: 14px; color: var(--text-muted); }
-  .drop-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-  .drive-folder-input { display: flex; gap: 8px; margin-bottom: 12px; }
-  .drive-folder-input input { flex: 1; }
-  .btn-load-folder { padding: 11px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-  #drive-file-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
-  .drive-file-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
-  .drive-file-item:last-child { border-bottom: none; }
-  .drive-file-item.selected { background: rgba(255,107,53,.1); }
-  .drive-file-item input[type="checkbox"] { flex-shrink: 0; accent-color: var(--accent); }
-  .drive-file-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
-  .drive-file-name { font-size: 12px; font-family: var(--mono); color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .drive-select-all { font-size: 12px; color: var(--accent); cursor: pointer; margin-bottom: 8px; display: inline-block; }
-  #preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 14px; }
-  .preview-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--surface2); }
-  .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-  .preview-item .name-badge { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.7); font-size: 9px; font-family: var(--mono); color: #fff; padding: 3px 4px; line-height: 1.2; word-break: break-all; }
-  .preview-count { font-size: 12px; color: var(--accent2); font-family: var(--mono); margin-top: 10px; }
-  #filename-preview { background: var(--surface2); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-top: 4px; min-height: 44px; }
-  #filename-preview .fn-folder { color: var(--accent2); }
-  #filename-preview .fn-file { color: var(--success); }
-  .drive-status { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 12px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
-  .status-dot.connected { background: var(--success); }
-  .status-dot.error { background: var(--error); }
-  .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-  .btn { width: 100%; max-width: 640px; padding: 16px; border: none; border-radius: 12px; font-family: var(--sans); font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .btn:active { transform: scale(.98); }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); margin-bottom: 16px; width: 100%; max-width: 640px; }
-  #log { width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-top: 16px; display: none; }
-  #log.visible { display: block; }
-  .log-line { font-family: var(--mono); font-size: 12px; line-height: 2; display: flex; align-items: flex-start; gap: 8px; }
-  .log-line.ok .icon { color: var(--success); }
-  .log-line.err .icon { color: var(--error); }
-  .log-line.info { color: var(--text-muted); }
-  .log-line.info .icon { color: var(--accent2); }
-  #done-banner { display: none; width: 100%; max-width: 640px; background: linear-gradient(135deg, #06d6a033, #06d6a011); border: 1px solid var(--success); border-radius: 12px; padding: 16px 20px; margin-top: 16px; text-align: center; }
-  #done-banner.visible { display: block; }
-  #done-banner strong { color: var(--success); font-size: 15px; }
-  #done-banner p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-  .err-banner { background: #ef476f22; border: 1px solid var(--error); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--error); margin-top: 12px; display: none; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* ヘッダー */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-top: 8px;
+  }
+  .header-icon { font-size: 2rem; margin-bottom: 6px; }
+  .header h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+  .header p {
+    font-size: 0.75rem;
+    color: var(--text3);
+    margin-top: 4px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* カード */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* フォーム */
+  .form-row { margin-bottom: 12px; }
+  .form-row label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text2);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .form-row input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-row input:focus { border-color: var(--accent); }
+  .form-row input[type="date"] { color-scheme: dark; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 16px;
+    gap: 3px;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+  }
+  .tab.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ドロップゾーン */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.05);
+  }
+  .dropzone-icon { font-size: 2rem; margin-bottom: 8px; }
+  .dropzone p { font-size: 0.82rem; color: var(--text2); }
+  .dropzone p small { color: var(--text3); font-size: 0.72rem; }
+  #fileInput { display: none; }
+
+  /* Driveタブ */
+  .drive-load-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .drive-load-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* 写真グリッド */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .photo-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .photo-thumb.selected { border-color: var(--accent2); }
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb .check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent2);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .photo-thumb.selected .check { display: flex; }
+  .photo-thumb .num {
+    position: absolute;
+    bottom: 3px;
+    left: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+
+  /* 選択コントロール */
+  .select-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .select-controls button {
+    flex: 1;
+    padding: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .select-controls button:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* プレビューリスト */
+  .preview-list { display: flex; flex-direction: column; gap: 4px; }
+  .preview-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: 6px;
+    font-size: 0.75rem;
+  }
+  .preview-item .idx {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    min-width: 28px;
+  }
+  .preview-item .fname { color: var(--text2); word-break: break-all; }
+
+  /* 保存先フォルダ */
+  .folder-section { margin-top: 4px; }
+  .folder-info {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+    font-size: 0.78rem;
+  }
+  .folder-info .folder-name {
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 4px;
+    word-break: break-all;
+  }
+  .folder-info .folder-link {
+    color: var(--text3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    word-break: break-all;
+  }
+  .folder-info .folder-link a { color: var(--accent); text-decoration: none; }
+
+  .hint {
+    font-size: 0.72rem;
+    color: var(--text3);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .hint span { color: var(--accent); }
+
+  /* 接続ステータス */
+  .conn-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .conn-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+  }
+  .conn-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+  .conn-dot.connected { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .conn-dot.error { background: var(--danger); }
+
+  /* ボタン */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #6fa3ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(79,142,247,0.35);
+  }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-connect {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    width: auto;
+  }
+  .btn-connect:hover { background: rgba(79,142,247,0.1); }
+
+  /* ログ */
+  .log-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 12px;
+    display: none;
+  }
+  .log-area.show { display: block; }
+  .log-ok { color: var(--accent2); }
+  .log-err { color: var(--danger); }
+  .log-info { color: var(--text2); }
+  .log-warn { color: var(--warn); }
+
+  /* 完了バナー */
+  .done-banner {
+    background: rgba(52,211,153,0.1);
+    border: 1px solid var(--accent2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-top: 12px;
+    display: none;
+  }
+  .done-banner.show { display: block; }
+  .done-banner a { color: var(--accent); word-break: break-all; font-size: 0.78rem; font-weight: 400; }
+
+  /* スピナー */
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
-  .loading .spinner { display: block; }
-  .loading .btn-label { display: none; }
+
+  .count-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 99px;
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 28px 16px;
+    color: var(--text3);
+    font-size: 0.82rem;
+  }
+
+  /* プログレスバー */
+  .progress-wrap {
+    margin-top: 10px;
+    display: none;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-bar-bg {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-text {
+    font-size: 0.72rem;
+    color: var(--text3);
+    margin-top: 5px;
+    text-align: right;
+    font-family: 'Share Tech Mono', monospace;
+  }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo-icon">🏗️</div>
-  <div><h1>現場写真整理</h1><p>解体工事 / 現場記録管理システム</p></div>
-</header>
+
+<div class="header">
+  <div class="header-icon">🏗️</div>
+  <h1>現場写真整理</h1>
+  <p>解体工事 / 現場記録管理システム</p>
+</div>
+
+<!-- 01 現場情報 -->
 <div class="card">
   <div class="card-title">01 現場情報</div>
-  <div class="field"><label>施工日</label><input type="date" id="f-date"></div>
-  <div class="field"><label>住所</label><input type="text" id="f-address" placeholder="例：東京都渋谷区〇〇1-2-3"></div>
-  <div class="field"><label>現場名</label><input type="text" id="f-name" placeholder="例：田中邸"></div>
+  <div class="form-row">
+    <label>施工日</label>
+    <input type="date" id="kojiDate">
+  </div>
+  <div class="form-row">
+    <label>住所</label>
+    <input type="text" id="address" placeholder="例：松戸市六高台3-26">
+  </div>
+  <div class="form-row">
+    <label>現場名</label>
+    <input type="text" id="genbaName" placeholder="例：軽量鉄骨2f-56tubo">
+  </div>
 </div>
+
+<!-- 02 写真を選択 -->
 <div class="card">
   <div class="card-title">02 写真を選択</div>
-  <div class="mode-tabs">
-    <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">📱 端末から選ぶ</div>
-    <div class="mode-tab" id="tab-drive" onclick="switchMode('drive')">☁️ Driveから選ぶ</div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('device')">📱 端末から選ぶ</button>
+    <button class="tab" onclick="switchTab('drive')">☁️ Driveから選ぶ</button>
   </div>
-  <div id="mode-local">
-    <div class="dropzone" id="dropzone">
-      <input type="file" id="file-input" accept="image/*" multiple>
-      <div class="drop-icon">📷</div>
-      <div class="drop-text">写真をここにドロップ</div>
-      <div class="drop-sub">またはタップして選択（複数枚OK）</div>
+
+  <!-- 端末タブ -->
+  <div id="tab-device" class="tab-content active">
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="dropzone-icon">📷</div>
+      <p>写真をここにドロップ<br><small>またはタップして選択（複数枚OK）</small></p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+  </div>
+
+  <!-- Driveタブ -->
+  <div id="tab-drive" class="tab-content">
+    <button class="drive-load-btn" onclick="loadDrivePhotos()">📂 未整理フォルダを読み込む</button>
+    <div id="drivePhotoArea">
+      <div class="empty-state">「読み込む」を押してDriveの写真を取得</div>
     </div>
   </div>
-  <div id="mode-drive" style="display:none">
-    <label>未整理フォルダの写真</label>
-    <div class="drive-folder-input">
-      <input type="text" id="f-source-folder" value="17Dpan8lTYVe56sffwl4ZpQHM0bvKNMBT" placeholder="フォルダIDを入力">
-      <button class="btn-load-folder" onclick="loadDriveFolder()">📂 読み込む</button>
+
+  <!-- 選択済み表示 -->
+  <div id="selectedArea" style="display:none; margin-top:14px;">
+    <div class="select-controls">
+      <button onclick="selectAll()">✅ すべて選択</button>
+      <button onclick="deselectAll()">⬜ すべて解除</button>
     </div>
-    <div id="drive-file-list" style="display:none">
-      <span class="drive-select-all" onclick="toggleSelectAll()">すべて選択／解除</span>
-      <div id="drive-file-items"></div>
-    </div>
+    <div class="photo-grid" id="photoGrid"></div>
   </div>
-  <div id="preview-count" class="preview-count" style="display:none"></div>
-  <div id="preview-grid"></div>
 </div>
+
+<!-- 03 ファイル名プレビュー -->
 <div class="card">
-  <div class="card-title">03 ファイル名プレビュー</div>
-  <div id="filename-preview">現場情報と写真を入力すると自動生成されます</div>
+  <div class="card-title">03 ファイル名プレビュー <span id="previewCount" class="count-badge">0</span></div>
+  <div id="previewList" class="preview-list">
+    <div class="empty-state">現場情報と写真を入力すると自動生成されます</div>
+  </div>
 </div>
+
+<!-- 04 保存先設定 -->
 <div class="card">
   <div class="card-title">04 Google Drive 設定</div>
-  <div class="field">
-    <label>保存先フォルダ（URLをそのまま貼り付けてOK）</label>
-    <input type="text" id="f-folder-id" placeholder="https://drive.google.com/drive/folders/〇〇 またはフォルダID">
-    <div class="hint">💡 DriveのフォルダURLをそのまま貼り付けると自動でIDを取り出します</div>
+
+  <div class="folder-section">
+    <div class="form-row">
+      <label>保存先フォルダ（任意）</label>
+      <input type="text" id="folderUrl"
+        placeholder="既存フォルダのURLを貼り付け（空欄→マイドライブに新規作成）"
+        oninput="onFolderUrlInput()">
+    </div>
+
+    <div class="hint">
+      💡 <span>初回：</span>空欄のままにするとマイドライブに<code>{施工日}-{住所}-{現場名}</code>フォルダを自動作成<br>
+      💡 <span>2回目以降：</span>作成済みフォルダのURLを貼ると追加保存されます
+    </div>
+
+    <div id="folderPreview" class="folder-info" style="display:none;">
+      <div class="folder-name" id="folderPreviewName"></div>
+      <div class="folder-link">📎 <a id="folderPreviewLink" href="#" target="_blank">Drive で開く</a></div>
+    </div>
   </div>
-  <div class="drive-status">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text" style="font-size:12px;color:var(--text-muted)">未接続</span>
+
+  <div class="conn-row" style="margin-top:16px;">
+    <div class="conn-status">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connLabel">未接続</span>
+    </div>
+    <button class="btn btn-connect" onclick="connectDrive()">🔗 Google Drive に接続する</button>
   </div>
-  <div class="err-banner" id="auth-err"></div>
 </div>
-<button class="btn btn-secondary" onclick="connectDrive()">🔗 Google Drive に接続する</button>
-<button class="btn btn-primary" id="btn-run" onclick="run()" disabled>
-  <span class="btn-label">🚀 整理して保存する（未整理から削除）</span>
-  <div class="spinner"></div>
+
+<!-- 実行ボタン -->
+<button class="btn btn-primary" id="runBtn" onclick="runOrganize()" disabled>
+  🚀 整理して保存する
 </button>
-<div id="log"></div>
-<div id="done-banner"><strong>✅ 完了しました！</strong><p id="done-text"></p></div>
+
+<!-- プログレス -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+
+<!-- ログ -->
+<div class="log-area" id="logArea"></div>
+
+<!-- 完了バナー -->
+<div class="done-banner" id="doneBanner"></div>
+
 <script>
-const CLIENT_ID='557911723346-bnce8oln4km4lf4a1vlltk3caogt5mtm.apps.googleusercontent.com';
-const SOURCE_FOLDER_ID='17Dpan8lTYVe56sffwl4ZpQHM0bvKNMBT';
-const SCOPES='https://www.googleapis.com/auth/drive';
-let files=[],driveFiles=[],mode='local',accessToken=null,tokenExpiry=0;
-function extractFolderId(input){const m=input.match(/folders\/([a-zA-Z0-9_-]+)/);return m?m[1]:input.trim();}
-function switchMode(m){mode=m;document.getElementById('tab-local').classList.toggle('active',m==='local');document.getElementById('tab-drive').classList.toggle('active',m==='drive');document.getElementById('mode-local').style.display=m==='local'?'':'none';document.getElementById('mode-drive').style.display=m==='drive'?'':'none';files=[];driveFiles=[];document.getElementById('preview-grid').innerHTML='';document.getElementById('preview-count').style.display='none';updateFilenamePreview();checkRunnable();}
-function fmtDate(s){if(!s)return{folder:'',file:''};const[y,m,d]=s.split('-');return{folder:`${y}.${parseInt(m)}.${parseInt(d)}`,file:`${y}${m}${d}`};}
-function folderName(){const date=fmtDate(document.getElementById('f-date').value).folder,addr=document.getElementById('f-address').value.trim(),name=document.getElementById('f-name').value.trim();if(!date&&!addr&&!name)return'';return[date,addr,name].filter(Boolean).join('-');}
-function getCount(){return mode==='local'?files.length:driveFiles.filter(f=>f.selected).length;}
-function fileNames(){const{file:dateFile}=fmtDate(document.getElementById('f-date').value);const name=document.getElementById('f-name').value.trim();const count=getCount();return Array.from({length:count},(_,i)=>{const num=String(i+1).padStart(3,'0');let ext='jpg';if(mode==='local'&&files[i])ext=files[i].name.split('.').pop().toLowerCase()||'jpg';if(mode==='drive'){const sel=driveFiles.filter(f=>f.selected);if(sel[i])ext=sel[i].name.split('.').pop().toLowerCase()||'jpg';}return`${dateFile}_${num}_${name}.${ext}`;});}
-function updateFilenamePreview(){const fpreview=document.getElementById('filename-preview'),folder=folderName(),names=fileNames();if(!folder&&getCount()===0){fpreview.innerHTML='現場情報と写真を入力すると自動生成されます';return;}let html='';if(folder)html+=`<div class="fn-folder">📁 ${folder}/</div>`;names.slice(0,5).forEach(n=>{html+=`<div class="fn-file">&nbsp;&nbsp;📷 ${n}</div>`;});if(names.length>5)html+=`<div style="color:var(--text-muted)">&nbsp;&nbsp;... 他 ${names.length-5} 枚</div>`;fpreview.innerHTML=html||'現場情報と写真を入力すると自動生成されます';}
-function updateLocalPreview(){const grid=document.getElementById('preview-grid'),countEl=document.getElementById('preview-count');grid.innerHTML='';if(files.length===0){countEl.style.display='none';return;}countEl.style.display='block';countEl.textContent=`${files.length} 枚選択中`;const names=fileNames();files.slice(0,20).forEach((f,i)=>{const url=URL.createObjectURL(f),item=document.createElement('div');item.className='preview-item';item.innerHTML=`<img src="${url}" loading="lazy"><div class="name-badge">${names[i]||f.name}</div>`;grid.appendChild(item);});}
-function updateDrivePreview(){const countEl=document.getElementById('preview-count'),sel=driveFiles.filter(f=>f.selected);countEl.style.display=sel.length>0?'block':'none';countEl.textContent=`${sel.length} 枚選択中`;}
-['f-date','f-address','f-name'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{updateFilenamePreview();if(mode==='local')updateLocalPreview();if(mode==='drive')renderDriveList();checkRunnable();});});
-document.getElementById('f-folder-id').addEventListener('input',checkRunnable);
-function checkRunnable(){const folderInput=document.getElementById('f-folder-id').value.trim();const ok=getCount()>0&&document.getElementById('f-date').value&&document.getElementById('f-address').value.trim()&&document.getElementById('f-name').value.trim()&&accessToken&&folderInput;document.getElementById('btn-run').disabled=!ok;}
-const dz=document.getElementById('dropzone'),fi=document.getElementById('file-input');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));updateLocalPreview();updateFilenamePreview();checkRunnable();});
-fi.addEventListener('change',()=>{files=Array.from(fi.files);updateLocalPreview();updateFilenamePreview();checkRunnable();});
-async function loadDriveFolder(){if(!accessToken){alert('先にGoogle Driveに接続してください');return;}const folderId=extractFolderId(document.getElementById('f-source-folder').value.trim())||SOURCE_FOLDER_ID;const btn=document.querySelector('.btn-load-folder');btn.textContent='読み込み中...';btn.disabled=true;try{const q=`'${folderId}' in parents and mimeType contains 'image/' and trashed=false`,res=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,thumbnailLink,mimeType)&pageSize=100`);driveFiles=res.files.map(f=>({...f,selected:true}));renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();if(driveFiles.length===0)alert('フォルダに写真が見つかりませんでした');}catch(e){alert('読み込みエラー: '+e.message);}btn.textContent='📂 読み込む';btn.disabled=false;}
-function renderDriveList(){const container=document.getElementById('drive-file-items'),listEl=document.getElementById('drive-file-list'),names=fileNames();if(driveFiles.length===0){listEl.style.display='none';return;}listEl.style.display='block';container.innerHTML='';driveFiles.forEach((f,i)=>{const sel=driveFiles.filter(x=>x.selected),idx=sel.findIndex(x=>x.id===f.id),newName=idx>=0?names[idx]:f.name,item=document.createElement('div');item.className='drive-file-item'+(f.selected?' selected':'');item.innerHTML=`<input type="checkbox" ${f.selected?'checked':''} onchange="toggleFile(${i}, this.checked)">${f.thumbnailLink?`<img class="drive-file-thumb" src="${f.thumbnailLink}" loading="lazy">`:'<div class="drive-file-thumb"></div>'}<span class="drive-file-name" title="${newName}">${newName}</span>`;container.appendChild(item);});}
-function toggleFile(i,checked){driveFiles[i].selected=checked;renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();}
-function toggleSelectAll(){const allSelected=driveFiles.every(f=>f.selected);driveFiles.forEach(f=>f.selected=!allSelected);renderDriveList();updateDrivePreview();updateFilenamePreview();checkRunnable();}
-function connectDrive(){const redirect=location.href.split('#')[0],url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=consent`;window.location.href=url;}
-(function parseToken(){const hash=location.hash.slice(1);if(!hash)return;const params=Object.fromEntries(hash.split('&').map(p=>p.split('=')));if(params.access_token){accessToken=params.access_token;tokenExpiry=Date.now()+parseInt(params.expires_in||3600)*1000;history.replaceState(null,'',location.pathname+location.search);setDriveStatus(true);checkRunnable();}})();
-function setDriveStatus(ok){const dot=document.getElementById('status-dot'),txt=document.getElementById('status-text');dot.className='status-dot '+(ok?'connected':'error');txt.textContent=ok?'接続済み ✓':'接続失敗';txt.style.color=ok?'var(--success)':'var(--error)';}
-function showAuthErr(msg){const el=document.getElementById('auth-err');el.textContent=msg;el.style.display='block';}
-async function driveRequest(url,opts={}){const res=await fetch(url,{...opts,headers:{'Authorization':`Bearer ${accessToken}`,...(opts.headers||{})}});if(!res.ok&&res.status!==204){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||`HTTP ${res.status}`);}if(res.status===204)return{};return res.json();}
-async function deleteFile(fileId){const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`,{method:'DELETE',headers:{'Authorization':`Bearer ${accessToken}`}});if(!res.ok&&res.status!==204){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||`Delete failed ${res.status}`);}}
-async function findOrCreateFolder(name,parentId){const q=`name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`,search=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);if(search.files&&search.files.length>0)return search.files[0].id;const created=await driveRequest('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]})});return created.id;}
-async function uploadLocalFile(file,newName,folderId){const metadata={name:newName,parents:[folderId]},form=new FormData();form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));form.append('file',file);const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',headers:{'Authorization':`Bearer ${accessToken}`},body:form});if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||'Upload failed');}return res.json();}
-async function moveFile(fileId,newName,folderId){const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/copy`,{method:'POST',headers:{'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'},body:JSON.stringify({name:newName,parents:[folderId]})});if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||'Copy failed');}await deleteFile(fileId);}
-function log(type,icon,msg){const el=document.getElementById('log');el.classList.add('visible');const line=document.createElement('div');line.className=`log-line ${type}`;line.innerHTML=`<span class="icon">${icon}</span><span>${msg}</span>`;el.appendChild(line);el.scrollTop=el.scrollHeight;}
-async function run(){const btn=document.getElementById('btn-run'),logEl=document.getElementById('log'),doneBanner=document.getElementById('done-banner');logEl.innerHTML='';logEl.classList.remove('visible');doneBanner.classList.remove('visible');if(!accessToken||Date.now()>tokenExpiry){showAuthErr('Google Driveに再接続してください');return;}const parentId=extractFolderId(document.getElementById('f-folder-id').value.trim());if(!parentId){log('err','❌','保存先フォルダを入力してください');return;}btn.classList.add('loading');btn.disabled=true;const folder=folderName(),names=fileNames();log('info','📁',`フォルダを確認中: ${folder}`);let folderId;try{folderId=await findOrCreateFolder(folder,parentId);log('ok','✅','フォルダ準備完了');}catch(e){log('err','❌',`フォルダ作成エラー: ${e.message}`);btn.classList.remove('loading');btn.disabled=false;return;}let ok=0,fail=0;if(mode==='local'){for(let i=0;i<files.length;i++){log('info','⬆️',`アップロード中 (${i+1}/${files.length}): ${names[i]}`);try{await uploadLocalFile(files[i],names[i],folderId);log('ok','✅',names[i]);ok++;}catch(e){log('err','❌',`${names[i]} — ${e.message}`);fail++;}}}else{const sel=driveFiles.filter(f=>f.selected);for(let i=0;i<sel.length;i++){log('info','🔀',`移動中 (${i+1}/${sel.length}): ${names[i]}`);try{await moveFile(sel[i].id,names[i],folderId);log('ok','✅',`${names[i]} → 未整理から削除済み`);ok++;}catch(e){log('err','❌',`${names[i]} — ${e.message}`);fail++;}}}btn.classList.remove('loading');btn.disabled=false;if(ok>0){doneBanner.classList.add('visible');document.getElementById('done-text').textContent=`${ok} 枚を「${folder}」に移動しました${fail>0?`（${fail} 枚失敗）`:''}`;}}
-document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+// ── 定数 ──────────────────────────────────────────────
+const CLIENT_ID = '557911723346-bnce8oln4km4lf4a1vlltk3caogt5mtm.apps.googleusercontent.com';
+const UNSORTED_FOLDER_ID = '17Dpan8lTYVe56sffwl4ZpQHM0bvKNMBT';
+const SCOPE = 'https://www.googleapis.com/auth/drive';
+
+// ── 状態 ──────────────────────────────────────────────
+let accessToken = null;
+let selectedFiles = [];       // { file, name, driveId? }
+let driveItems = [];          // Drive から読み込んだアイテム
+let currentTab = 'device';
+
+// ── 初期化 ────────────────────────────────────────────
+window.onload = () => {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  document.getElementById('kojiDate').value = `${y}-${m}-${d}`;
+
+  document.getElementById('kojiDate').addEventListener('input', updatePreview);
+  document.getElementById('address').addEventListener('input', updatePreview);
+  document.getElementById('genbaName').addEventListener('input', updatePreview);
+  document.getElementById('fileInput').addEventListener('change', onFileSelect);
+  setupDrop();
+};
+
+// ── タブ切り替え ──────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && tab==='device') || (i===1 && tab==='drive'));
+  });
+  document.getElementById('tab-device').classList.toggle('active', tab==='device');
+  document.getElementById('tab-drive').classList.toggle('active', tab==='drive');
+}
+
+// ── ドロップゾーン ────────────────────────────────────
+function setupDrop() {
+  const dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    addFiles([...e.dataTransfer.files]);
+  });
+}
+
+function onFileSelect(e) { addFiles([...e.target.files]); }
+
+function addFiles(files) {
+  const imgs = files.filter(f => f.type.startsWith('image/'));
+  imgs.forEach(f => {
+    selectedFiles.push({ file: f, name: f.name, driveId: null });
+  });
+  renderGrid();
+  updatePreview();
+}
+
+// ── Drive 読み込み ────────────────────────────────────
+async function loadDrivePhotos() {
+  if (!accessToken) { alert('先にGoogle Driveに接続してください。'); return; }
+  const area = document.getElementById('drivePhotoArea');
+  area.innerHTML = '<div class="empty-state"><span class="spinner"></span> 読み込み中...</div>';
+  try {
+    const res = await gfetch(`https://www.googleapis.com/drive/v3/files?q='${UNSORTED_FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'+and+trashed=false&fields=files(id,name,mimeType,thumbnailLink,webContentLink)&pageSize=100`);
+    driveItems = res.files || [];
+    if (!driveItems.length) {
+      area.innerHTML = '<div class="empty-state">未整理フォルダに写真がありません</div>';
+      return;
+    }
+    // Drive 写真を選択リストに追加
+    driveItems.forEach(item => {
+      if (!selectedFiles.find(s => s.driveId === item.id)) {
+        selectedFiles.push({ file: null, name: item.name, driveId: item.id, thumb: item.thumbnailLink });
+      }
+    });
+    renderGrid();
+    updatePreview();
+    area.innerHTML = `<div class="empty-state" style="color:var(--accent2)">✅ ${driveItems.length}枚 読み込みました</div>`;
+  } catch(e) {
+    area.innerHTML = `<div class="empty-state" style="color:var(--danger)">読み込みエラー：${e.message}</div>`;
+  }
+}
+
+// ── グリッド描画 ──────────────────────────────────────
+function renderGrid() {
+  const area = document.getElementById('selectedArea');
+  const grid = document.getElementById('photoGrid');
+  if (!selectedFiles.length) { area.style.display='none'; return; }
+  area.style.display = 'block';
+  grid.innerHTML = '';
+  selectedFiles.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'photo-thumb selected';
+    div.dataset.idx = idx;
+    div.onclick = () => toggleThumb(idx);
+
+    if (item.file) {
+      const url = URL.createObjectURL(item.file);
+      div.innerHTML = `<img src="${url}"><div class="check">✓</div><div class="num">${idx+1}</div>`;
+    } else {
+      div.innerHTML = `<img src="${item.thumb || ''}"><div class="check">✓</div><div class="num">${idx+1}</div>`;
+    }
+    grid.appendChild(div);
+  });
+}
+
+function toggleThumb(idx) {
+  const el = document.querySelector(`.photo-thumb[data-idx="${idx}"]`);
+  el.classList.toggle('selected');
+  updatePreview();
+}
+
+function selectAll() { document.querySelectorAll('.photo-thumb').forEach(t => t.classList.add('selected')); updatePreview(); }
+function deselectAll() { document.querySelectorAll('.photo-thumb').forEach(t => t.classList.remove('selected')); updatePreview(); }
+
+// ── プレビュー更新 ────────────────────────────────────
+function updatePreview() {
+  const date = document.getElementById('kojiDate').value;
+  const genba = document.getElementById('genbaName').value.trim();
+  const list = document.getElementById('previewList');
+  const count = document.getElementById('previewCount');
+  const runBtn = document.getElementById('runBtn');
+
+  const selected = getSelectedFiles();
+  count.textContent = selected.length;
+
+  if (!selected.length || !date || !genba) {
+    list.innerHTML = '<div class="empty-state">現場情報と写真を入力すると自動生成されます</div>';
+    runBtn.disabled = true;
+    return;
+  }
+
+  const dateStr = date.replace(/-/g,'');
+  list.innerHTML = selected.map((item, i) => {
+    const ext = item.name.split('.').pop().toLowerCase();
+    const newName = `${dateStr}_${String(i+1).padStart(3,'0')}_${genba}.${ext}`;
+    return `<div class="preview-item"><span class="idx">${String(i+1).padStart(3,'0')}</span><span class="fname">${newName}</span></div>`;
+  }).join('');
+
+  runBtn.disabled = !(accessToken && selected.length && date && genba);
+}
+
+function getSelectedFiles() {
+  const thumbs = document.querySelectorAll('.photo-thumb.selected');
+  const idxs = [...thumbs].map(t => parseInt(t.dataset.idx));
+  return idxs.map(i => selectedFiles[i]);
+}
+
+// ── フォルダURL解析 ───────────────────────────────────
+function extractFolderId(url) {
+  const m = url.match(/[-\w]{25,}/);
+  return m ? m[0] : null;
+}
+
+function onFolderUrlInput() {
+  const url = document.getElementById('folderUrl').value.trim();
+  const preview = document.getElementById('folderPreview');
+  if (!url) { preview.style.display='none'; return; }
+  const id = extractFolderId(url);
+  if (id) {
+    document.getElementById('folderPreviewName').textContent = `📂 フォルダID: ${id}`;
+    document.getElementById('folderPreviewLink').href = `https://drive.google.com/drive/folders/${id}`;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// ── Google 認証 ───────────────────────────────────────
+function connectDrive() {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: location.origin + location.pathname,
+    response_type: 'token',
+    scope: SCOPE,
+  });
+  sessionStorage.setItem('pendingAuth','1');
+  location.href = `https://accounts.google.com/o/oauth2/auth?${params}`;
+}
+
+function checkToken() {
+  const hash = new URLSearchParams(location.hash.replace('#',''));
+  const token = hash.get('access_token');
+  if (token) {
+    accessToken = token;
+    history.replaceState(null,'',location.pathname);
+    setConnected(true);
+    updatePreview();
+  }
+}
+checkToken();
+
+function setConnected(ok) {
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLabel');
+  dot.className = 'conn-dot ' + (ok ? 'connected' : 'error');
+  lbl.textContent = ok ? '接続済み' : 'エラー';
+}
+
+// ── Drive API ─────────────────────────────────────────
+async function gfetch(url, opts={}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: { Authorization: `Bearer ${accessToken}`, ...(opts.headers||{}) }
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`API ${res.status}: ${txt}`);
+  }
+  if (res.status === 204) return {};
+  return res.json();
+}
+
+// ── フォルダ取得または作成 ────────────────────────────
+async function getOrCreateFolder(parentId, folderName) {
+  // 既存チェック
+  const q = encodeURIComponent(`'${parentId}' in parents and name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const res = await gfetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,webViewLink)&pageSize=1`);
+  if (res.files && res.files.length) {
+    log(`既存フォルダを使用: ${folderName}`, 'warn');
+    return res.files[0];
+  }
+  // 新規作成
+  const body = { name: folderName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] };
+  const created = await gfetch('https://www.googleapis.com/drive/v3/files?fields=id,name,webViewLink', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  log(`フォルダ作成: ${folderName}`, 'ok');
+  return created;
+}
+
+// ── マイドライブルートID取得 ──────────────────────────
+async function getRootId() {
+  const res = await gfetch('https://www.googleapis.com/drive/v3/files/root?fields=id');
+  return res.id;
+}
+
+// ── ファイルアップロード ──────────────────────────────
+async function uploadFile(file, fileName, folderId) {
+  const meta = { name: fileName, parents: [folderId] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+  form.append('file', file);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form
+  });
+  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+  return res.json();
+}
+
+// ── DriveファイルをコピーしてリネームDrive→別フォルダ ──
+async function copyAndRename(driveId, newName, destFolderId) {
+  const res = await gfetch(`https://www.googleapis.com/drive/v3/files/${driveId}/copy?fields=id,name`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: newName, parents: [destFolderId] })
+  });
+  return res;
+}
+
+// ── 未整理フォルダから削除 ────────────────────────────
+async function removeFromUnsorted(driveId) {
+  await gfetch(`https://www.googleapis.com/drive/v3/files/${driveId}?removeParents=${UNSORTED_FOLDER_ID}&addParents=`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+}
+
+// ── ログ ──────────────────────────────────────────────
+function log(msg, type='info') {
+  const el = document.getElementById('logArea');
+  el.classList.add('show');
+  const line = document.createElement('div');
+  line.className = `log-${type}`;
+  const prefix = { ok:'✅', err:'❌', info:'·', warn:'⚠️' }[type] || '·';
+  line.textContent = `${prefix} ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── プログレス ────────────────────────────────────────
+function setProgress(cur, total) {
+  const wrap = document.getElementById('progressWrap');
+  wrap.classList.add('show');
+  document.getElementById('progressFill').style.width = `${Math.round(cur/total*100)}%`;
+  document.getElementById('progressText').textContent = `${cur} / ${total}`;
+}
+
+// ── メイン処理 ────────────────────────────────────────
+async function runOrganize() {
+  const dateVal = document.getElementById('kojiDate').value;
+  const address = document.getElementById('address').value.trim();
+  const genba = document.getElementById('genbaName').value.trim();
+  const folderUrlVal = document.getElementById('folderUrl').value.trim();
+  const selected = getSelectedFiles();
+
+  if (!dateVal || !genba || !selected.length) {
+    alert('施工日・現場名・写真を入力してください。');
+    return;
+  }
+
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<span class="spinner"></span> 処理中...';
+  document.getElementById('logArea').innerHTML = '';
+  document.getElementById('logArea').classList.remove('show');
+  document.getElementById('doneBanner').classList.remove('show');
+  document.getElementById('progressWrap').classList.remove('show');
+
+  try {
+    // 日付フォーマット
+    const [y,m,d] = dateVal.split('-');
+    const dateDisp = `${y}.${parseInt(m)}.${parseInt(d)}`;
+    const dateFile = `${y}${m}${d}`;
+
+    // フォルダ名
+    const folderName = address
+      ? `${dateDisp}-${address}-${genba}`
+      : `${dateDisp}-${genba}`;
+
+    // 保存先フォルダIDを決定
+    let destFolderId;
+    let destFolderLink;
+
+    if (folderUrlVal) {
+      // URLが入力されている → そのフォルダに保存
+      const fid = extractFolderId(folderUrlVal);
+      if (!fid) throw new Error('フォルダURLが正しくありません');
+      destFolderId = fid;
+      destFolderLink = `https://drive.google.com/drive/folders/${fid}`;
+      log(`保存先フォルダを指定: ${fid}`, 'info');
+    } else {
+      // 空欄 → マイドライブに新規作成（同名があれば再利用）
+      log('保存先未指定 → マイドライブに自動作成します', 'info');
+      const rootId = await getRootId();
+      const folder = await getOrCreateFolder(rootId, folderName);
+      destFolderId = folder.id;
+      destFolderLink = folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
+    }
+
+    log(`フォルダ: ${folderName}`, 'info');
+
+    // ファイルを順番に処理
+    const total = selected.length;
+    for (let i = 0; i < total; i++) {
+      const item = selected[i];
+      const ext = item.name.split('.').pop().toLowerCase() || 'jpg';
+      const newName = `${dateFile}_${String(i+1).padStart(3,'0')}_${genba}.${ext}`;
+
+      setProgress(i, total);
+
+      if (item.file) {
+        // 端末ファイル → アップロード
+        await uploadFile(item.file, newName, destFolderId);
+        log(`アップロード: ${newName}`, 'ok');
+      } else if (item.driveId) {
+        // Driveファイル → コピー＆リネーム
+        await copyAndRename(item.driveId, newName, destFolderId);
+        log(`コピー: ${newName}`, 'ok');
+        // 未整理フォルダから削除
+        try {
+          await removeFromUnsorted(item.driveId);
+          log(`未整理から削除: ${item.name}`, 'info');
+        } catch(e) {
+          log(`削除スキップ: ${e.message}`, 'warn');
+        }
+      }
+    }
+
+    setProgress(total, total);
+
+    // 完了
+    const banner = document.getElementById('doneBanner');
+    banner.innerHTML = `✅ 完了しました！ ${total}枚を保存しました<br>
+      <a href="${destFolderLink}" target="_blank">📂 保存先フォルダを開く</a><br>
+      <span style="font-size:0.72rem;color:var(--text3);font-weight:400;">次回はこのURLを「保存先フォルダ」に貼り付けると追加保存できます</span>`;
+    banner.classList.add('show');
+
+    log('処理完了！', 'ok');
+
+    // 保存先URL欄に今回のフォルダURLを入れておく
+    document.getElementById('folderUrl').value = destFolderLink;
+    onFolderUrlInput();
+
+  } catch(e) {
+    log(`エラー: ${e.message}`, 'err');
+    alert(`エラーが発生しました：\n${e.message}`);
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = '🚀 整理して保存する';
+    updatePreview();
+  }
+}
 </script>
 </body>
 </html>
